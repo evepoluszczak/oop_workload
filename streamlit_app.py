@@ -25,23 +25,24 @@ def get_and_process_data():
     """
     # Données brutes simulant le fichier CSV.
     # Dans une application réelle, cela pourrait venir d'une base de données.
+    # CORRECTION : Les guillemets dans les noms de projet ont été corrigés pour éviter les erreurs de syntaxe.
     raw_data = """
-    ,,,,,,,2025-01-01,2025-01-06,2025-01-13,2025-01-20,2025-01-27,2025-02-03
-    Anita,,Congé,,Congé,,,,100,100,0,0,0,0
-    ,,Temps Partiel,,Temps Partiel,,,,20,20,20,20,20,20
-    ,,Département A,,POC,,"New POC ""Red""",,20,30,40,0,0
-    ,,Département A,,Projet,,"New Projet ""Green""",,10,50,40,0,0
-    Eve,,Support,,Support,,,,80,80,80,80,80,80
-    ,,Département B,,Projet,,"New Milk Report""",,20,20,20,20,20
-    Bruno,,Congé,,Congé,,,,0,0,0,100,100,0
-    ,,Département C,,POC,,"New POC ""Blue""",,60,60,60,0,0,60
-    ,,Département A,,Support,,Support,,,,40,40,40,0,0,40
-    Florian,,Support,,Support,,,,100,100,100,100,100,100
-    Joss,,Département B,,Projet,,"New Projet ""Orange""",,50,50,0,0,0,0
-    ,,Département A,,Projet,,"New Projet ""Yellow""",,50,50,100,100,100,100
-    Sébastien,,Temps Partiel,,Temps Partiel,,,,20,20,20,20,20,20
-    ,,Support,,Support,,,,80,80,80,80,80,80
-    """
+,,,,,,,2025-01-01,2025-01-06,2025-01-13,2025-01-20,2025-01-27,2025-02-03
+Anita,,Congé,,Congé,,,,100,100,0,0,0,0
+,,Temps Partiel,,Temps Partiel,,,,20,20,20,20,20,20
+,,Département A,,POC,,"New POC ""Red""",,20,30,40,0,0,0
+,,Département A,,Projet,,"New Projet ""Green""",,10,50,40,0,0,0
+Eve,,Support,,Support,,,,80,80,80,80,80,80
+,,Département B,,Projet,,"New Milk Report",,20,20,20,20,20,20
+Bruno,,Congé,,Congé,,,,0,0,0,100,100,0
+,,Département C,,POC,,"New POC ""Blue""",,60,60,60,0,0,60
+,,Département A,,Support,,Support,,,,40,40,40,0,0,40
+Florian,,Support,,Support,,,,100,100,100,100,100,100
+Joss,,Département B,,Projet,,"New Projet ""Orange""",,50,50,0,0,0,0
+,,Département A,,Projet,,"New Projet ""Yellow""",,50,50,100,100,100,100
+Sébastien,,Temps Partiel,,Temps Partiel,,,,20,20,20,20,20,20
+,,Support,,Support,,,,80,80,80,80,80,80
+"""
 
     try:
         # Utiliser io.StringIO pour lire la chaîne de caractères comme un fichier
