@@ -22,20 +22,20 @@ def initialiser_la_base_de_donnees():
     annee_pour_mois_precedent = annee_actuelle if mois_actuel > 1 else annee_actuelle - 1
 
     data = {
-        'id': [1, 2, 3, 4, 5],
-        'location': ['Site Alpha', 'Site Alpha', 'Site Bêta', 'Site Gamma', 'Site Gamma'],
-        'division': ['Division Nord', 'Division Nord', 'Division Sud', 'Division Nord', 'Division Nord'],
-        'year': [annee_actuelle - 1, annee_actuelle - 1, annee_actuelle - 1, annee_actuelle - 1, annee_actuelle],
-        'month': [mois_actuel, mois_precedent, mois_actuel, mois_actuel, mois_precedent],
-        'category': ['Électricité', 'Gazole', 'Électricité', 'Électricité', 'Gaz Naturel'],
-        'value_input': [15000, 550, 22000, 8000, 1200],
-        'unit_input': ['kWh', 'litres', 'kWh', 'kWh', 'm³'],
-        'value_standardized': [15, 550, 22, 8, 1200],
-        'unit_standardized': ['MWh', 'litres', 'MWh', 'MWh', 'm³'],
-        'status': ['Approuvé', 'Approuvé', 'Approuvé', 'Approuvé', 'En attente'],
-        'submitted_by': ['user_alpha', 'user_alpha', 'user_beta', 'user_gamma', 'user_gamma'],
-        'approved_by': ['manager_nord', 'manager_nord', 'manager_sud', 'manager_nord', None],
-        'submission_date': [pd.to_datetime(now) - pd.DateOffset(years=1)] * 4 + [pd.to_datetime(now)]
+        'id': [1, 2, 3, 4, 5, 6],
+        'location': ['Site Alpha', 'Site Alpha', 'Site Bêta', 'Site Gamma', 'Site Gamma', 'Site Gamma'],
+        'division': ['Division Nord', 'Division Nord', 'Division Sud', 'Division Nord', 'Division Nord', 'Division Nord'],
+        'year': [annee_actuelle - 1, annee_actuelle - 1, annee_actuelle - 1, annee_actuelle - 1, annee_actuelle, annee_actuelle - 1],
+        'month': [mois_actuel, mois_precedent, mois_actuel, mois_actuel, mois_precedent, mois_precedent],
+        'category': ['Électricité', 'Gazole', 'Électricité', 'Électricité', 'Gaz Naturel', 'Gaz Naturel'],
+        'value_input': [15000, 550, 22000, 8000, 1200, 1150],
+        'unit_input': ['kWh', 'litres', 'kWh', 'kWh', 'm³', 'm³'],
+        'value_standardized': [15, 550, 22, 8, 1200, 1150],
+        'unit_standardized': ['MWh', 'litres', 'MWh', 'MWh', 'm³', 'm³'],
+        'status': ['Approuvé', 'Approuvé', 'Approuvé', 'Approuvé', 'En attente', 'Approuvé'],
+        'submitted_by': ['user_alpha', 'user_alpha', 'user_beta', 'user_gamma', 'user_gamma', 'user_gamma'],
+        'approved_by': ['manager_nord', 'manager_nord', 'manager_sud', 'manager_nord', None, 'manager_nord'],
+        'submission_date': [pd.to_datetime(now) - pd.DateOffset(years=1)] * 4 + [pd.to_datetime(now)] + [pd.to_datetime(now) - pd.DateOffset(years=1)]
     }
     return pd.DataFrame(data)
 
