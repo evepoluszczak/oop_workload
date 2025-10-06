@@ -289,26 +289,18 @@ else:
     elif role == 'Location Manager':
         st.title(f"📋 Data Validation for {user_info['location']}")
 
-        # Add a year selector
         reporting_year = st.selectbox(
             "Select Reporting Year",
             options=sorted(st.session_state.data['year'].unique(), reverse=True),
             index=0
         )
 
-        # Filter data for the manager's location
         location_data = st.session_state.data[st.session_state.data['location'] == user_info['location']].copy()
-
-        # Separate data for current and previous year
         current_year_data = location_data[location_data['year'] == reporting_year].reset_index()
         previous_year_data = location_data[location_data['year'] == reporting_year - 1]
-
-        # Prepare previous year data for merging
         previous_year_values = previous_year_data[['location', 'category', 'value_standardized']].rename(
             columns={'value_standardized': 'value_prev_year'}
         )
-
-        # Merge dataframes to have current and previous year values side-by-side
         validation_df = pd.merge(
             current_year_data,
             previous_year_values,
@@ -322,54 +314,62 @@ else:
             st.info(f"No data submitted for {reporting_year} yet.")
         else:
             # Display header row
-            c1, c2, c3, c4, c5, c6 = st.columns([3, 4, 2, 2, 2, 3])
-            # c1.write("**Location**") # Not needed as it's filtered
-            c2.write("**Category**")
-            c3.write(f"**Value {reporting_year}**")
-            c4.write(f"**Value {reporting_year - 1}**")
-            c5.write("**Plausibility**")
-            c6.write("**Actions / Status**")
+            c1, c2, c3, c4, c5 = st.columns([4, 2, 2, 2, 3])
+            c1.write("**Category**")
+            c2.write(f"**Value {reporting_year}**")
+            c3.write(f"**Value {reporting_year - 1}**")
+            c4.write("**Plausibility**")
+            c5.write("**Actions / Status**")
             st.divider()
 
             for index, row in validation_df.iterrows():
-                c1, c2, c3, c4, c5, c6 = st.columns([3, 4, 2, 2, 2, 3])
-                
-                # c1 is now a spacer or can be removed
-                with c2:
-                    st.write(row['category'])
-                with c3:
-                    st.metric("", f"{row['value_standardized']:.2f} {row['unit_standardized']}")
-                
-                with c4:
-                    if pd.notna(row['value_prev_year']):
-                        st.metric("", f"{row['value_prev_year']:.2f} {row['unit_standardized']}")
-                    else:
-                        st.write("N/A")
-
-                with c5:
-                    if pd.notna(row['value_prev_year']):
-                        prev_val = row['value_prev_year']
-                        curr_val = row['value_standardized']
-                        if prev_val == 0:
-                            plausibility_text = "N/A"
+                with st.container():
+                    c1, c2, c3, c4, c5 = st.columns([4, 2, 2, 2, 3])
+                    
+                    with c1:
+                        st.write(row['category'])
+                    
+                    with c2:
+                        st.write(f"{row['value_standardized']:.2f} {row['unit_standardized']}")
+                    
+                    with c3:
+                        if pd.notna(row['value_prev_year']):
+                            st.write(f"{row['value_prev_year']:.2f} {row['unit_standardized']}")
                         else:
-                            diff = ((curr_val - prev_val) / prev_val) * 100
-                            plausibility_text = f"{diff:+.1f}%"
-                        st.metric("", plausibility_text)
-                    else:
-                        st.write("N/A")
+                            st.write("N/A")
 
-                with c6:
-                    if row['status'] == 'Pending':
-                        button_cols = st.columns(2)
-                        if button_cols[0].button("Approve", key=f"approve_{row['id']}", type="primary", use_container_width=True):
-                            st.session_state.data.loc[st.session_state.data['id'] == row['id'], ['status', 'approved_by']] = ['Approved', username]
-                            st.rerun()
-                        if button_cols[1].button("Reject", key=f"reject_{row['id']}", use_container_width=True):
-                            st.session_state.data.loc[st.session_state.data['id'] == row['id'], ['status', 'approved_by']] = ['Rejected', username]
-                            st.rerun()
-                    else:
-                        st.write(f"_{row['status']} by {row['approved_by']}_")
+                    with c4:
+                        if pd.notna(row['value_prev_year']):
+                            prev_val = row['value_prev_year']
+                            curr_val = row['value_standardized']
+                            if prev_val == 0:
+                                plausibility_text = "N/A"
+                                color = "grey"
+                            else:
+                                diff = ((curr_val - prev_val) / prev_val) * 100
+                                plausibility_text = f"{diff:+.1f}%"
+                                if abs(diff) < 10:
+                                    color = "green"
+                                elif abs(diff) <= 25:
+                                    color = "orange"
+                                else:
+                                    color = "red"
+                            st.markdown(f'<p style="color:{color}; font-weight: bold;">{plausibility_text}</p>', unsafe_allow_html=True)
+                        else:
+                            st.write("N/A")
+
+                    with c5:
+                        if row['status'] == 'Pending':
+                            button_cols = st.columns(2)
+                            if button_cols[0].button("Approve", key=f"approve_{row['id']}", type="primary", use_container_width=True):
+                                st.session_state.data.loc[st.session_state.data['id'] == row['id'], ['status', 'approved_by']] = ['Approved', username]
+                                st.rerun()
+                            if button_cols[1].button("Reject", key=f"reject_{row['id']}", use_container_width=True):
+                                st.session_state.data.loc[st.session_state.data['id'] == row['id'], ['status', 'approved_by']] = ['Rejected', username]
+                                st.rerun()
+                        else:
+                            st.write(f"_{row['status']} by {row['approved_by']}_")
+                st.divider()
         
         st.divider()
         st.header("📦 Export Validated Data")
