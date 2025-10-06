@@ -283,7 +283,15 @@ else:
                 
                 st.header("Submission History")
                 location_data = st.session_state.data[st.session_state.data['location'] == user_info['location']].copy()
-                st.dataframe(location_data[['year', 'category', 'value_input', 'unit_input', 'status']].sort_values(by=['year'], ascending=False), hide_index=True, use_container_width=True)
+                
+                if not location_data.empty:
+                    available_years = sorted(location_data['year'].unique(), reverse=True)
+                    selected_year_for_history = st.selectbox("Filter history by year", available_years, key="history_year_filter")
+                    
+                    filtered_history = location_data[location_data['year'] == selected_year_for_history]
+                    st.dataframe(filtered_history[['year', 'category', 'value_input', 'unit_input', 'status']].sort_values(by=['category']), hide_index=True, use_container_width=True)
+                else:
+                    st.info("No submission history available for this location.")
 
 
     elif role == 'Location Manager':
