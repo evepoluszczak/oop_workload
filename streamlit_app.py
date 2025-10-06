@@ -15,40 +15,28 @@ def initialize_database():
     """Creates a DataFrame to simulate a database with historical data."""
     now = datetime.now()
     current_year = now.year
-    current_month = now.month
-    previous_month = current_month - 1 if current_month > 1 else 12
     
     data = {
-        'id': [1, 2, 3, 4, 5, 6],
-        'location': ['Site Alpha', 'Site Alpha', 'Site Beta', 'Site Gamma', 'Site Gamma', 'Site Gamma'],
-        'division': ['North Division', 'North Division', 'South Division', 'North Division', 'North Division', 'North Division'],
-        'year': [current_year - 1, current_year - 1, current_year - 1, current_year - 1, current_year, current_year - 1],
-        'month': [current_month, previous_month, current_month, current_month, previous_month, previous_month],
-        'category': ['Purchased electricity (Bundled)', 'Diesel B7 (on-road vehicle)', 'Purchased electricity (Bundled)', 'Purchased electricity (Bundled)', 'Natural gas', 'Natural gas'],
-        'value_input': [15000, 550, 22000, 8000, 1200, 1150],
-        'unit_input': ['kWh', 'liters', 'kWh', 'kWh', 'm³', 'm³'],
-        'value_standardized': [15, 550, 22, 8, 1200, 1150],
-        'unit_standardized': ['MWh', 'liters', 'MWh', 'MWh', 'm³', 'm³'],
-        'status': ['Approved', 'Approved', 'Approved', 'Approved', 'Pending', 'Approved'],
-        'submitted_by': ['user_alpha', 'user_alpha', 'user_beta', 'user_gamma', 'user_gamma', 'user_gamma'],
-        'approved_by': ['manager_north', 'manager_north', 'manager_south', 'manager_north', None, 'manager_north'],
-        'submission_date': [pd.to_datetime(now) - pd.DateOffset(years=1)] * 4 + [pd.to_datetime(now)] + [pd.to_datetime(now) - pd.DateOffset(years=1)]
+        'id': [1, 2, 3],
+        'location': ['Site Alpha', 'Site Beta', 'Site Gamma'],
+        'division': ['North Division', 'South Division', 'North Division'],
+        'year': [current_year - 1, current_year - 1, current_year],
+        'month': [np.nan, np.nan, np.nan],
+        'category': ['Diesel B7 (on-road vehicle)', 'Gasoline E5 (on-road vehicle)', 'Leakage R134a'],
+        'value_input': [12550, 8500, 15],
+        'unit_input': ['liters', 'liters', 'kg'],
+        'value_standardized': [12550, 8500, 15],
+        'unit_standardized': ['liters', 'liters', 'kg'],
+        'status': ['Approved', 'Approved', 'Pending'],
+        'submitted_by': ['user_alpha', 'user_beta', 'user_gamma'],
+        'approved_by': ['manager_north', 'manager_south', None],
+        'submission_date': [pd.to_datetime(now) - pd.DateOffset(years=1)] * 2 + [pd.to_datetime(now)]
     }
     df = pd.DataFrame(data)
     df['month'] = df['month'].astype('Float64')
     return df
 
 # --- Category and Conversion Definitions ---
-MONTHLY_CATEGORIES = {
-    "Purchased electricity (Bundled)": "Energy",
-    "Purchased electricity (Unbundled)": "Energy",
-    "Natural gas": "Energy",
-    "Heating oil": "Fuel",
-    "District heating": "Energy",
-    "Diesel B0 (stationary combustion)": "Fuel",
-    "Water": "Water",
-}
-
 ANNUAL_CATEGORIES_CONFIG = {
     # Refrigerants
     "Leakage R134a": {"standard_unit": "kg", "units": {"kg": 1, "lbs": 0.453592}, "group": "Refrigerants"},
@@ -98,13 +86,6 @@ ANNUAL_CATEGORIES_CONFIG = {
     "Beef cattle": {"standard_unit": "heads", "units": {"heads": 1}, "group": "Agriculture"},
 }
 
-
-UNIT_CONVERSIONS = {
-    "Energy": {"MWh": 1, "kWh": 0.001, "GWh": 1000},
-    "Fuel": {"liters": 1, "gallons (US)": 3.78541, "m³": 1000},
-    "Water": {"m³": 1, "liters": 0.001}
-}
-
 # --- Mock Users ---
 USERS = {
     'user_alpha': {'role': 'Site Employee', 'location': 'Site Alpha', 'division': 'North Division'},
@@ -127,28 +108,20 @@ if 'annual_config' not in st.session_state:
     }
 
 # --- Utility Functions ---
-def perform_conversion(value, unit, category, is_annual=False):
+def perform_conversion(value, unit, category):
     """Performs unit conversion to the defined standard."""
-    if is_annual:
-        config = ANNUAL_CATEGORIES_CONFIG[category]
-        factor = config["units"].get(unit, 1)
-        standard_unit = config["standard_unit"]
-        standard_value = value * factor
-    else:
-        category_type = MONTHLY_CATEGORIES[category]
-        factor = UNIT_CONVERSIONS[category_type].get(unit, 1)
-        standard_unit = list(UNIT_CONVERSIONS[category_type].keys())[0]
-        standard_value = value * factor
+    config = ANNUAL_CATEGORIES_CONFIG[category]
+    factor = config["units"].get(unit, 1)
+    standard_unit = config["standard_unit"]
+    standard_value = value * factor
     return standard_value, standard_unit
 
 def get_plausibility_check(record_to_check, full_data):
-    """Checks the value from the previous year for the same month/site/category."""
-    is_annual = pd.isna(record_to_check['month'])
+    """Checks the value from the previous year for the same site/category."""
     query = ((full_data['location'] == record_to_check['location']) &
              (full_data['category'] == record_to_check['category']) &
              (full_data['year'] == record_to_check['year'] - 1) &
              (full_data['status'] == 'Approved'))
-    query &= (pd.isna(full_data['month'])) if is_annual else (full_data['month'] == record_to_check['month'])
     previous_year_data = full_data[query]
 
     if not previous_year_data.empty:
@@ -181,37 +154,15 @@ else:
         
         page_selection = "Overview"
         if role == 'Site Employee':
-            page_selection = st.radio("Navigation", ["Monthly Entry", "Annual Entry", "Annual Configuration"])
+            # Reordered the navigation menu
+            page_selection = st.radio("Navigation", ["Annual Configuration", "Annual Entry"])
         
         if st.button("Log Out"):
             for key in list(st.session_state.keys()): del st.session_state[key]
             st.rerun()
 
     if role == 'Site Employee':
-        if page_selection == "Monthly Entry":
-            st.title(f"📊 Monthly Data Entry for {user_info['location']}")
-            with st.form("data_entry_form", clear_on_submit=True):
-                c1, c2, c3 = st.columns(3)
-                year = c1.selectbox("Year", [datetime.now().year, datetime.now().year - 1], index=0)
-                month = c2.selectbox("Month", range(1, 13), index=datetime.now().month - 1)
-                category = c3.selectbox("Category", list(MONTHLY_CATEGORIES.keys()))
-                
-                available_units = list(UNIT_CONVERSIONS[MONTHLY_CATEGORIES[category]].keys())
-                c4, c5 = st.columns([2, 1])
-                value = c4.number_input("Value", min_value=0.0, format="%.2f")
-                unit = c5.selectbox("Unit", available_units)
-                
-                if st.form_submit_button("Submit", type="primary"):
-                    std_val, std_unit = perform_conversion(value, unit, category)
-                    new_id = st.session_state.data['id'].max() + 1 if not st.session_state.data.empty else 1
-                    new_data = pd.DataFrame([{'id': new_id, 'location': user_info['location'], 'division': user_info['division'], 'year': year, 'month': float(month), 'category': category, 'value_input': value, 'unit_input': unit, 'value_standardized': std_val, 'unit_standardized': std_unit, 'status': 'Pending', 'submitted_by': username, 'approved_by': None, 'submission_date': pd.to_datetime('now')}])
-                    st.session_state.data = pd.concat([st.session_state.data, new_data], ignore_index=True)
-                    st.success(f"Data for {category} submitted successfully!")
-            st.header("Submission History")
-            location_data = st.session_state.data[st.session_state.data['location'] == user_info['location']].copy()
-            st.dataframe(location_data[['year', 'month', 'category', 'value_input', 'unit_input', 'status']].sort_values(by=['year', 'month'], ascending=False), hide_index=True, use_container_width=True)
-
-        elif page_selection == "Annual Configuration":
+        if page_selection == "Annual Configuration":
             st.title(f"⚙️ Annual Configuration for {user_info['location']}")
             st.info("Enable the categories for which you need to enter data once a year.")
             location = user_info['location']
@@ -255,11 +206,16 @@ else:
                     if st.form_submit_button("Submit Annual Data", type="primary"):
                         for category, data in form_data.items():
                             if data['value'] > 0:
-                                std_val, std_unit = perform_conversion(data['value'], data['unit'], category, is_annual=True)
+                                std_val, std_unit = perform_conversion(data['value'], data['unit'], category)
                                 new_id = st.session_state.data['id'].max() + 1 if not st.session_state.data.empty else 1
                                 new_data = pd.DataFrame([{'id': new_id, 'location': user_info['location'], 'division': user_info['division'], 'year': year, 'month': np.nan, 'category': category, 'value_input': data['value'], 'unit_input': data['unit'], 'value_standardized': std_val, 'unit_standardized': std_unit, 'status': 'Pending', 'submitted_by': username, 'approved_by': None, 'submission_date': pd.to_datetime('now')}])
                                 st.session_state.data = pd.concat([st.session_state.data, new_data], ignore_index=True)
                         st.success("Annual data submitted for validation!")
+                
+                st.header("Submission History")
+                location_data = st.session_state.data[st.session_state.data['location'] == user_info['location']].copy()
+                st.dataframe(location_data[['year', 'category', 'value_input', 'unit_input', 'status']].sort_values(by=['year'], ascending=False), hide_index=True, use_container_width=True)
+
 
     elif role == 'Division Manager':
         st.title(f"📋 Data Validation for {user_info['division']}")
@@ -274,8 +230,7 @@ else:
                     c1, c2, c3, c4 = st.columns([2, 3, 2, 2])
                     with c1:
                         st.write(f"**{row['location']}**")
-                        caption = f"Year {row['year']}" if pd.isna(row['month']) else f"{int(row['month'])}/{row['year']}"
-                        st.caption(caption)
+                        st.caption(f"Year {row['year']}")
                     c2.metric(f"{row['category']}", f"{row['value_standardized']:.2f} {row['unit_standardized']}", help=f"Input: {row['value_input']} {row['unit_input']}")
                     c3.metric("Plausibility", plausibility_text)
                     with c4:
