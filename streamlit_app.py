@@ -219,19 +219,16 @@ else:
             
             toggled_fields = []
             
-            # Define the order of groups
             group_order = ["Refrigerants", "Vehicle Fuels", "Other Fuels & Industrial Gases", "Self-Generated Energy", "Agriculture"]
 
             for group in group_order:
-                st.subheader(group)
-                # Get all items for the current group
-                items_in_group = {item: config for item, config in ANNUAL_CATEGORIES_CONFIG.items() if config.get("group") == group}
-                
-                for field in items_in_group:
-                    is_active = st.toggle(field, value=(field in current_selection), key=field)
-                    if is_active:
-                        toggled_fields.append(field)
-                st.divider()
+                with st.expander(group):
+                    items_in_group = {item: config for item, config in ANNUAL_CATEGORIES_CONFIG.items() if config.get("group") == group}
+                    
+                    for field in items_in_group:
+                        is_active = st.toggle(field, value=(field in current_selection), key=field)
+                        if is_active:
+                            toggled_fields.append(field)
 
             if st.button("Save Configuration", type="primary"):
                 st.session_state.annual_config[location] = toggled_fields
