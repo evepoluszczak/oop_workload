@@ -134,6 +134,7 @@ def get_plausibility_check(record_to_check, full_data):
 
 # --- User Interface ---
 if not st.session_state.logged_in:
+    st.image("liebherr.png", width=300)
     st.title("Welcome to the Energy Tracking Portal 🌿")
     username = st.selectbox("Select your username", list(USERS.keys()))
     if st.button("Log In", type="primary"):
