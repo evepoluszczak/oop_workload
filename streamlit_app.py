@@ -68,20 +68,48 @@ def initialize_database():
     current_year = now.year
     
     data = {
-        'id': [1, 2, 3, 4, 5],
-        'location': ['Colmar Site (France)', 'Newport News Site (USA)', 'Toulouse Site (France)', 'Toulouse Site (France)', 'Colmar Site (France)'],
-        'division': ['Mining Division', 'Mining Division', 'Aerospace Division', 'Aerospace Division', 'Mining Division'],
-        'year': [current_year - 1, current_year - 1, current_year, current_year - 1, current_year],
-        'month': [np.nan, np.nan, np.nan, np.nan, np.nan],
-        'category': ['Diesel B7 (on-road vehicle)', 'Gasoline E5 (on-road vehicle)', 'Leakage R134a', 'Leakage R134a', 'Diesel B7 (on-road vehicle)'],
-        'value_input': [12550, 8500, 15, 12, 13100],
-        'unit_input': ['liters', 'liters', 'kg', 'kg', 'liters'],
-        'value_standardized': [12550, 8500, 15, 12, 13100],
-        'unit_standardized': ['liters', 'liters', 'kg', 'kg', 'liters'],
-        'status': ['Approved', 'Approved', 'Pending', 'Approved', 'Pending'],
-        'submitted_by': ['user_colmar', 'user_newport', 'user_toulouse', 'user_toulouse', 'user_colmar'],
-        'approved_by': ['manager_mining', 'manager_mining', None, 'manager_aero', None],
-        'submission_date': [pd.to_datetime(now) - pd.DateOffset(years=1)] * 2 + [pd.to_datetime(now)] * 3
+        'id': [1, 2, 3, 4, 5, 6, 7, 8],
+        'location': [
+            'Colmar Site (France)', 'Newport News Site (USA)', 'Toulouse Site (France)', 
+            'Toulouse Site (France)', 'Colmar Site (France)', 'Colmar Site (France)', 
+            'Colmar Site (France)', 'Colmar Site (France)'
+        ],
+        'division': [ # Division can still be used for grouping/reporting
+            'Mining Division', 'Mining Division', 'Aerospace Division', 
+            'Aerospace Division', 'Mining Division', 'Mining Division',
+            'Mining Division', 'Mining Division'
+        ],
+        'year': [
+            current_year - 1, current_year - 1, current_year, 
+            current_year - 1, current_year, current_year - 1,
+            current_year, current_year
+        ],
+        'month': [np.nan] * 8,
+        'category': [
+            'Diesel B7 (on-road vehicle)', 'Gasoline E5 (on-road vehicle)', 'Leakage R134a', 
+            'Leakage R134a', 'Diesel B7 (on-road vehicle)', 'Leakage R410a',
+            'Leakage R410a', 'HVO100 (non-road vehicle)'
+        ],
+        'value_input': [12550, 8500, 15, 12, 13100, 22, 25, 5000],
+        'unit_input': ['liters', 'liters', 'kg', 'kg', 'liters', 'kg', 'kg', 'liters'],
+        'value_standardized': [12550, 8500, 15, 12, 13100, 22, 25, 5000],
+        'unit_standardized': ['liters', 'liters', 'kg', 'kg', 'liters', 'kg', 'kg', 'liters'],
+        'status': [
+            'Approved', 'Approved', 'Pending', 
+            'Approved', 'Pending', 'Approved',
+            'Pending', 'Pending'
+        ],
+        'submitted_by': [
+            'user_colmar', 'user_newport', 'user_toulouse', 
+            'user_toulouse', 'user_colmar', 'user_colmar',
+            'user_colmar', 'user_colmar'
+        ],
+        'approved_by': [
+            'manager_colmar', 'manager_newport', None, 
+            'manager_toulouse', None, 'manager_colmar',
+            None, None
+            ],
+        'submission_date': [pd.to_datetime(now) - pd.DateOffset(years=1)] * 2 + [pd.to_datetime(now)] * 6
     }
     df = pd.DataFrame(data)
     df['month'] = df['month'].astype('Float64')
@@ -137,12 +165,13 @@ ANNUAL_CATEGORIES_CONFIG = {
 
 # --- Mock Users ---
 USERS = {
-    'user_colmar': {'role': 'Site Employee', 'location': 'Colmar Site (France)', 'division': 'Mining Division'},
-    'user_newport': {'role': 'Site Employee', 'location': 'Newport News Site (USA)', 'division': 'Mining Division'},
-    'user_toulouse': {'role': 'Site Employee', 'location': 'Toulouse Site (France)', 'division': 'Aerospace Division'},
-    'manager_mining': {'role': 'Division Manager', 'division': 'Mining Division'},
-    'manager_aero': {'role': 'Division Manager', 'division': 'Aerospace Division'},
-    'admin': {'role': 'Administrator', 'division': 'All'}
+    'user_colmar': {'role': 'Site Employee', 'location': 'Colmar Site (France)'},
+    'user_newport': {'role': 'Site Employee', 'location': 'Newport News Site (USA)'},
+    'user_toulouse': {'role': 'Site Employee', 'location': 'Toulouse Site (France)'},
+    'manager_colmar': {'role': 'Location Manager', 'location': 'Colmar Site (France)'},
+    'manager_newport': {'role': 'Location Manager', 'location': 'Newport News Site (USA)'},
+    'manager_toulouse': {'role': 'Location Manager', 'location': 'Toulouse Site (France)'},
+    'admin': {'role': 'Administrator', 'location': 'All'}
 }
 
 # --- Session State Initialization ---
@@ -151,7 +180,7 @@ if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 if 'user_info' not in st.session_state: st.session_state.user_info = None
 if 'annual_config' not in st.session_state:
     st.session_state.annual_config = {
-        'Colmar Site (France)': ["Leakage R410a", "Diesel B7 (on-road vehicle)"], 
+        'Colmar Site (France)': ["Leakage R410a", "Diesel B7 (on-road vehicle)", "HVO100 (non-road vehicle)"], 
         'Newport News Site (USA)': ["Gasoline E5 (on-road vehicle)"],
         'Toulouse Site (France)': ["Leakage R134a", "Kerosene"]
     }
@@ -183,8 +212,8 @@ else:
     with st.sidebar:
         st.header(f"Welcome, {username}")
         st.write(f"**Role:** {role}")
-        if role == 'Site Employee': st.write(f"**Site:** {user_info['location']}")
-        if role == 'Division Manager': st.write(f"**Division:** {user_info['division']}")
+        if role in ['Site Employee', 'Location Manager']: 
+            st.write(f"**Site:** {user_info['location']}")
         
         page_selection = "Overview"
         if role == 'Site Employee':
@@ -241,7 +270,14 @@ else:
                             if data['value'] > 0:
                                 std_val, std_unit = perform_conversion(data['value'], data['unit'], category)
                                 new_id = st.session_state.data['id'].max() + 1 if not st.session_state.data.empty else 1
-                                new_data = pd.DataFrame([{'id': new_id, 'location': user_info['location'], 'division': user_info['division'], 'year': year, 'month': np.nan, 'category': category, 'value_input': data['value'], 'unit_input': data['unit'], 'value_standardized': std_val, 'unit_standardized': std_unit, 'status': 'Pending', 'submitted_by': username, 'approved_by': None, 'submission_date': pd.to_datetime('now')}])
+                                # Add division back for potential reporting, can be derived from location
+                                division_map = {
+                                    'Colmar Site (France)': 'Mining Division',
+                                    'Newport News Site (USA)': 'Mining Division',
+                                    'Toulouse Site (France)': 'Aerospace Division'
+                                }
+                                division = division_map.get(user_info['location'])
+                                new_data = pd.DataFrame([{'id': new_id, 'location': user_info['location'], 'division': division, 'year': year, 'month': np.nan, 'category': category, 'value_input': data['value'], 'unit_input': data['unit'], 'value_standardized': std_val, 'unit_standardized': std_unit, 'status': 'Pending', 'submitted_by': username, 'approved_by': None, 'submission_date': pd.to_datetime('now')}])
                                 st.session_state.data = pd.concat([st.session_state.data, new_data], ignore_index=True)
                         st.success("Annual data submitted for validation!")
                 
@@ -250,8 +286,8 @@ else:
                 st.dataframe(location_data[['year', 'category', 'value_input', 'unit_input', 'status']].sort_values(by=['year'], ascending=False), hide_index=True, use_container_width=True)
 
 
-    elif role == 'Division Manager':
-        st.title(f"📋 Data Validation for {user_info['division']}")
+    elif role == 'Location Manager':
+        st.title(f"📋 Data Validation for {user_info['location']}")
 
         # Add a year selector
         reporting_year = st.selectbox(
@@ -260,12 +296,12 @@ else:
             index=0
         )
 
-        # Filter data for the division
-        division_data = st.session_state.data[st.session_state.data['division'] == user_info['division']].copy()
+        # Filter data for the manager's location
+        location_data = st.session_state.data[st.session_state.data['location'] == user_info['location']].copy()
 
         # Separate data for current and previous year
-        current_year_data = division_data[division_data['year'] == reporting_year].reset_index()
-        previous_year_data = division_data[division_data['year'] == reporting_year - 1]
+        current_year_data = location_data[location_data['year'] == reporting_year].reset_index()
+        previous_year_data = location_data[location_data['year'] == reporting_year - 1]
 
         # Prepare previous year data for merging
         previous_year_values = previous_year_data[['location', 'category', 'value_standardized']].rename(
@@ -287,7 +323,7 @@ else:
         else:
             # Display header row
             c1, c2, c3, c4, c5, c6 = st.columns([3, 4, 2, 2, 2, 3])
-            c1.write("**Location**")
+            # c1.write("**Location**") # Not needed as it's filtered
             c2.write("**Category**")
             c3.write(f"**Value {reporting_year}**")
             c4.write(f"**Value {reporting_year - 1}**")
@@ -298,8 +334,7 @@ else:
             for index, row in validation_df.iterrows():
                 c1, c2, c3, c4, c5, c6 = st.columns([3, 4, 2, 2, 2, 3])
                 
-                with c1:
-                    st.write(row['location'])
+                # c1 is now a spacer or can be removed
                 with c2:
                     st.write(row['category'])
                 with c3:
@@ -307,7 +342,6 @@ else:
                 
                 with c4:
                     if pd.notna(row['value_prev_year']):
-                        # Use the same unit as the current year for comparison consistency
                         st.metric("", f"{row['value_prev_year']:.2f} {row['unit_standardized']}")
                     else:
                         st.write("N/A")
