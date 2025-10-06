@@ -1,225 +1,289 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import altair as alt
-from datetime import timedelta, datetime
-import io
+from datetime import datetime
 
-# ==============================================================================
-# Configuration de la page Streamlit
-# ==============================================================================
+# --- Configuration de la Page ---
 st.set_page_config(
-    page_title="Tableau de Bord - Charge de Travail",
-    page_icon="📊",
+    page_title="Portail de Suivi Énergétique",
+    page_icon="🌿",
     layout="wide"
 )
 
-# ==============================================================================
-# Fonction de chargement et de traitement des données
-# ==============================================================================
-@st.cache_data
-def get_and_process_data():
-    """
-    Génère un DataFrame basé sur la structure du fichier Excel, puis le transforme
-    en un format "tidy" (long) utilisable pour les graphiques.
-    """
-    # Données brutes simulant le fichier CSV.
-    # Dans une application réelle, cela pourrait venir d'une base de données.
-    # CORRECTION : Remplacement des """ par ''' pour définir la chaîne de caractères et éviter les erreurs de syntaxe.
-    raw_data = '''
-,,,,,,,2025-01-01,2025-01-06,2025-01-13,2025-01-20,2025-01-27,2025-02-03
-Anita,,Congé,,Congé,,,,100,100,0,0,0,0
-,,Temps Partiel,,Temps Partiel,,,,20,20,20,20,20,20
-,,Département A,,POC,,"New POC ""Red""",,20,30,40,0,0,0
-,,Département A,,Projet,,"New Projet ""Green""",,10,50,40,0,0,0
-Eve,,Support,,Support,,,,80,80,80,80,80,80
-,,Département B,,Projet,,"New Milk Report",,20,20,20,20,20,20
-Bruno,,Congé,,Congé,,,,0,0,0,100,100,0
-,,Département C,,POC,,"New POC ""Blue""",,60,60,60,0,0,60
-,,Département A,,Support,,Support,,,,40,40,40,0,0,40
-Florian,,Support,,Support,,,,100,100,100,100,100,100
-Joss,,Département B,,Projet,,"New Projet ""Orange""",,50,50,0,0,0,0
-,,Département A,,Projet,,"New Projet ""Yellow""",,50,50,100,100,100,100
-Sébastien,,Temps Partiel,,Temps Partiel,,,,20,20,20,20,20,20
-,,Support,,Support,,,,80,80,80,80,80,80
-'''
+# --- Base de Données Fictive (pour la démonstration) ---
+# Dans une application réelle, ceci serait remplacé par une connexion à une base de données (SQL, etc.)
+def initialiser_la_base_de_donnees():
+    """Crée un DataFrame pour simuler une base de données avec des données historiques."""
+    data = {
+        'id': [1, 2, 3, 4],
+        'location': ['Site Alpha', 'Site Alpha', 'Site Bêta', 'Site Gamma'],
+        'division': ['Division Nord', 'Division Nord', 'Division Sud', 'Division Nord'],
+        'year': [datetime.now().year - 1, datetime.now().year - 1, datetime.now().year - 1, datetime.now().year - 1],
+        'month': [datetime.now().month, datetime.now().month - 1 if datetime.now().month > 1 else 12, datetime.now().month, datetime.now().month],
+        'category': ['Électricité', 'Gazole', 'Électricité', 'Électricité'],
+        'value_input': [15000, 550, 22000, 8000],
+        'unit_input': ['kWh', 'litres', 'kWh', 'kWh'],
+        'value_standardized': [15, 550, 22, 8],
+        'unit_standardized': ['MWh', 'litres', 'MWh', 'MWh'],
+        'status': ['Approuvé', 'Approuvé', 'Approuvé', 'Approuvé'],
+        'submitted_by': ['user_alpha', 'user_alpha', 'user_beta', 'user_gamma'],
+        'approved_by': ['manager_nord', 'manager_nord', 'manager_sud', 'manager_nord'],
+        'submission_date': [pd.to_datetime('now') - pd.DateOffset(years=1)] * 4
+    }
+    return pd.DataFrame(data)
 
-    try:
-        # Utiliser io.StringIO pour lire la chaîne de caractères comme un fichier
-        df = pd.read_csv(io.StringIO(raw_data), header=None)
-        
-        # 1. La ligne de date est la première ligne (index 0)
-        date_row_index = 0
-        
-        # 2. Extraire les en-têtes de date et les données brutes
-        date_headers = pd.to_datetime(df.iloc[date_row_index], errors='coerce')
-        df_data = df.iloc[date_row_index + 1:].copy()
-        
-        # 3. Identifier les colonnes de métadonnées et de dates
-        first_date_col_index = date_headers.first_valid_index()
-        meta_cols = {0: 'Employé', 2: 'Projet', 4: 'Tâche'}
-        
-        # 4. Construire un DataFrame propre avec les bonnes colonnes
-        df_clean = df_data[list(meta_cols.keys())].copy()
-        df_clean.columns = list(meta_cols.values())
-        
-        df_dates = df_data.iloc[:, first_date_col_index:]
-        df_dates.columns = date_headers[first_date_col_index:]
-        
-        df_full = pd.concat([df_clean, df_dates], axis=1)
+# --- Définitions des Catégories et Conversions ---
+CATEGORIES = {
+    "Électricité": "Énergie",
+    "Gaz Naturel": "Énergie",
+    "Gazole": "Carburant",
+    "Essence": "Carburant",
+    "Consommation d'eau": "Eau"
+}
 
-        # 5. Remplir les informations manquantes (Employé, Projet)
-        df_full['Employé'] = df_full['Employé'].replace(['', ' ', np.nan]).ffill()
-        df_full['Projet'] = df_full['Projet'].replace(['', ' ', np.nan]).ffill()
-        
-        # 6. Supprimer les lignes non pertinentes
-        df_full.dropna(subset=['Tâche'], inplace=True)
-        df_full = df_full[~df_full['Tâche'].astype(str).str.contains('total', case=False, na=False)]
-        
-        # 7. Pivoter les données (Melt) pour passer au format long
-        id_vars = ['Employé', 'Projet', 'Tâche']
-        df_long = pd.melt(df_full, id_vars=id_vars, var_name='Date', value_name='Pourcentage')
+UNIT_CONVERSIONS = {
+    "Énergie": {"MWh": 1, "kWh": 0.001, "GWh": 1000}, # Cible: MWh
+    "Carburant": {"litres": 1, "gallons (US)": 3.78541}, # Cible: litres
+    "Eau": {"m³": 1, "litres": 0.001} # Cible: m³
+}
 
-        # 8. Nettoyage final
-        df_long.dropna(subset=['Pourcentage'], inplace=True)
-        df_long['Pourcentage'] = pd.to_numeric(df_long['Pourcentage'], errors='coerce').fillna(0)
-        df_long = df_long[df_long['Pourcentage'] > 0]
+# --- Utilisateurs Fictifs (pour la démonstration) ---
+USERS = {
+    'user_alpha': {'role': 'Employé de site', 'location': 'Site Alpha', 'division': 'Division Nord'},
+    'user_beta': {'role': 'Employé de site', 'location': 'Site Bêta', 'division': 'Division Sud'},
+    'user_gamma': {'role': 'Employé de site', 'location': 'Site Gamma', 'division': 'Division Nord'},
+    'manager_nord': {'role': 'Manager de division', 'division': 'Division Nord'},
+    'manager_sud': {'role': 'Manager de division', 'division': 'Division Sud'},
+    'admin': {'role': 'Administrateur', 'division': 'Toutes'}
+}
+LOCATIONS = sorted(['Site Alpha', 'Site Bêta', 'Site Gamma'] + [f"Site {i}" for i in range(4, 201)])
 
-        # 9. Conversion des pourcentages en jours (100% = 5 jours, donc 20% = 1 jour)
-        df_long['Jours'] = df_long['Pourcentage'] / 20.0
-        
-        # 10. Créer une colonne de tâche plus descriptive
-        df_long['Type de Tâche'] = df_long['Projet'] + " - " + df_long['Tâche']
-        
-        # 11. Sélectionner et renommer les colonnes finales
-        df_final = df_long[['Date', 'Employé', 'Type de Tâche', 'Jours']].copy()
-        df_final.rename(columns={'Employé': 'Collaborateur'}, inplace=True)
-        df_final['Date'] = pd.to_datetime(df_final['Date'])
-        
-        return df_final
+# --- Initialisation de l'état de la session ---
+if 'data' not in st.session_state:
+    st.session_state.data = initialiser_la_base_de_donnees()
+if 'logged_in' not in st.session_state:
+    st.session_state.logged_in = False
+if 'user_info' not in st.session_state:
+    st.session_state.user_info = None
 
-    except Exception as e:
-        st.error(f"Une erreur est survenue lors du traitement des données : {e}")
-        return pd.DataFrame()
-
-# ==============================================================================
-# Interface Principale
-# ==============================================================================
-st.title("📊 Tableau de Bord de la Charge de Travail de l'Équipe")
-st.markdown("Utilisez cette application pour visualiser la planification et équilibrer la charge de travail.")
-
-# --- Chargement et traitement des données intégrées ---
-df = get_and_process_data()
-
-if df.empty:
-    st.error("Impossible de charger les données. Le format interne pourrait être incorrect.")
-else:
-    # ==============================================================================
-    # Barre latérale pour les filtres
-    # ==============================================================================
-    st.sidebar.header("Filtres")
-    min_date = df['Date'].min().date()
-    max_date = df['Date'].max().date()
-
-    date_range = st.sidebar.date_input(
-        "Sélectionnez une période",
-        value=(min_date, max_date),
-        min_value=min_date,
-        max_value=max_date
-    )
-
-    all_collaborateurs = sorted(df['Collaborateur'].unique())
-    selected_collaborateurs = st.sidebar.multiselect(
-        "Sélectionnez les collaborateurs",
-        options=all_collaborateurs,
-        default=all_collaborateurs
-    )
+# --- Fonctions Utilitaires ---
+def perform_conversion(value, unit, category):
+    """Effectue la conversion d'unité vers le standard défini."""
+    category_type = CATEGORIES[category]
+    factor = UNIT_CONVERSIONS[category_type].get(unit, 1)
+    standard_unit = list(UNIT_CONVERSIONS[category_type].keys())[0]
     
-    # Créer un filtre par projet/catégorie principale
-    df['Projet'] = df['Type de Tâche'].apply(lambda x: x.split(' - ')[0])
-    all_projets = sorted(df['Projet'].unique())
-    selected_projets = st.sidebar.multiselect(
-        "Sélectionnez les projets/catégories",
-        options=all_projets,
-        default=all_projets
-    )
+    # La conversion se fait en multipliant par le facteur pour atteindre l'unité cible
+    # Par exemple, de kWh à MWh (cible), on multiplie par 0.001
+    standard_value = value * factor
+    return standard_value, standard_unit
 
-
-    # ==============================================================================
-    # Filtrage des données
-    # ==============================================================================
-    start_date, end_date = (pd.to_datetime(date_range[0]), pd.to_datetime(date_range[1])) if len(date_range) == 2 else (pd.to_datetime(date_range[0]), pd.to_datetime(date_range[0]))
-
-    filtered_df = df[
-        (df['Date'] >= start_date) &
-        (df['Date'] <= end_date) &
-        (df['Collaborateur'].isin(selected_collaborateurs)) &
-        (df['Projet'].isin(selected_projets))
+def get_plausibility_check(record_to_check, full_data):
+    """Vérifie la valeur de l'année précédente pour le même mois/site/catégorie."""
+    previous_year_data = full_data[
+        (full_data['location'] == record_to_check['location']) &
+        (full_data['category'] == record_to_check['category']) &
+        (full_data['month'] == record_to_check['month']) &
+        (full_data['year'] == record_to_check['year'] - 1) &
+        (full_data['status'] == 'Approuvé')
     ]
+    if not previous_year_data.empty:
+        previous_value = previous_year_data.iloc[0]['value_standardized']
+        current_value = record_to_check['value_standardized']
+        if previous_value == 0:
+            return "N/A (valeur précédente nulle)", "info"
+        
+        diff = ((current_value - previous_value) / previous_value) * 100
+        color = "error" if abs(diff) > 25 else "success" if abs(diff) < 10 else "warning"
+        return f"{diff:+.1f}% vs. A-1", color
+    return "Aucune donnée A-1", "info"
 
-    # ==============================================================================
-    # Affichage du tableau de bord
-    # ==============================================================================
-    if filtered_df.empty:
-        st.warning("Aucune donnée disponible pour les filtres sélectionnés.")
-    else:
-        st.markdown("---")
-        # --- KPIs ---
-        col1, col2, col3 = st.columns(3)
-        total_jours = filtered_df['Jours'].sum()
-        jours_absence = filtered_df[filtered_df['Projet'].str.contains('Congé|Absence|Férié|Temps Partiel', case=False)]['Jours'].sum()
-        jours_selectionnes = (end_date - start_date).days + 1
-        
-        col1.metric("Total Jours Planifiés", f"{total_jours:.1f} j")
-        col2.metric("Jours d'Absence (Congés, etc.)", f"{jours_absence:.1f} j")
-        col3.metric("Période Analysée", f"{jours_selectionnes} j")
-        
-        st.markdown("---")
+# --- Interface Utilisateur ---
 
-        # --- Graphique : Charge par collaborateur ---
-        st.header("Charge de Travail par Collaborateur")
-        workload_df = filtered_df.groupby('Collaborateur')['Jours'].sum().reset_index()
-        
-        # Calcul de la charge théorique (jours ouvrables dans la période)
-        jours_ouvrables = np.busday_count(start_date.date(), (end_date + timedelta(days=1)).date())
+# 1. Écran de Connexion
+if not st.session_state.logged_in:
+    st.title("Bienvenue sur le Portail de Suivi Énergétique 🌿")
+    st.write("Veuillez vous identifier pour continuer.")
 
-        bar_chart = alt.Chart(workload_df).mark_bar().encode(
-            x=alt.X('Collaborateur:N', sort='-y', title="Collaborateur"),
-            y=alt.Y('Jours:Q', title="Jours planifiés cumulés"),
-            color=alt.Color('Collaborateur:N', legend=None),
-            tooltip=['Collaborateur', alt.Tooltip('Jours:Q', format='.1f')]
-        ).properties(height=400)
-        
-        rule = alt.Chart(pd.DataFrame({'y': [jours_ouvrables]})).mark_rule(color='red', strokeDash=[5,5]).encode(y='y')
-        
-        st.altair_chart(bar_chart + rule, use_container_width=True)
-        st.info(f"La ligne rouge représente la capacité théorique pour la période ({jours_ouvrables} jours ouvrables). Les barres dépassant cette ligne indiquent une surcharge potentielle.")
+    username = st.selectbox("Sélectionnez votre nom d'utilisateur", list(USERS.keys()))
+    
+    if st.button("Se Connecter", type="primary"):
+        st.session_state.logged_in = True
+        st.session_state.user_info = USERS[username]
+        st.session_state.username = username
+        st.rerun()
 
-        # --- Graphiques de répartition ---
-        col1_graph, col2_graph = st.columns(2)
-        
-        with col1_graph:
-            st.header("Répartition par Projet/Catégorie")
-            task_dist_df = filtered_df.groupby('Projet')['Jours'].sum().reset_index()
-            pie_chart = alt.Chart(task_dist_df).mark_arc(innerRadius=50).encode(
-                theta=alt.Theta(field="Jours", type="quantitative"),
-                color=alt.Color(field="Projet", type="nominal", title="Catégorie"),
-                tooltip=['Projet', alt.Tooltip('Jours:Q', format='.1f')]
-            ).properties(height=350)
-            st.altair_chart(pie_chart, use_container_width=True)
-        
-        with col2_graph:
-            st.header("Détail par Collaborateur et Projet")
-            stacked_bar = alt.Chart(filtered_df).mark_bar().encode(
-                x=alt.X('Collaborateur:N', title=None),
-                y=alt.Y('sum(Jours):Q', title="Jours"),
-                color=alt.Color('Projet:N', title="Légende"),
-                tooltip=['Collaborateur', 'Projet', alt.Tooltip('sum(Jours):Q', format='.1f')]
-            ).properties(height=350)
-            st.altair_chart(stacked_bar, use_container_width=True)
+# 2. Application Principale (après connexion)
+else:
+    user_info = st.session_state.user_info
+    username = st.session_state.username
+    role = user_info['role']
 
-        # --- Données brutes ---
-        with st.expander("Voir les données détaillées filtrées"):
-            display_df = filtered_df[['Date', 'Collaborateur', 'Type de Tâche', 'Jours']].copy()
-            st.dataframe(display_df.sort_values(by="Date", ascending=False).style.format({"Date": "{:%d-%m-%Y}", "Jours": "{:.2f}"}))
+    # Barre latérale avec les informations utilisateur et la déconnexion
+    with st.sidebar:
+        st.header(f"Bienvenue, {username}")
+        st.write(f"**Rôle:** {role}")
+        if role == 'Employé de site':
+            st.write(f"**Site:** {user_info['location']}")
+        if role == 'Manager de division':
+            st.write(f"**Division:** {user_info['division']}")
+        
+        if st.button("Se Déconnecter"):
+            for key in list(st.session_state.keys()):
+                del st.session_state[key]
+            st.rerun()
 
+    # --- Vue pour les Employés de Site ---
+    if role == 'Employé de site':
+        st.title(f"📊 Saisie des données pour {user_info['location']}")
+        
+        st.info("ℹ️ **Comment ça marche ?** Entrez vos données de consommation mensuelles dans le formulaire ci-dessous. Elles seront ensuite envoyées à votre manager de division pour approbation.", icon="💡")
+
+        with st.form("data_entry_form", clear_on_submit=True):
+            st.header("Formulaire de saisie")
+            
+            c1, c2, c3 = st.columns(3)
+            with c1:
+                year = st.selectbox("Année", [datetime.now().year, datetime.now().year - 1], index=0)
+            with c2:
+                month = st.selectbox("Mois", range(1, 13), index=datetime.now().month - 1)
+            with c3:
+                category = st.selectbox("Catégorie", list(CATEGORIES.keys()))
+            
+            category_type = CATEGORIES[category]
+            available_units = list(UNIT_CONVERSIONS[category_type].keys())
+
+            c4, c5 = st.columns([2, 1])
+            with c4:
+                value = st.number_input("Valeur de consommation", min_value=0.0, format="%.2f")
+            with c5:
+                unit = st.selectbox("Unité", available_units)
+            
+            submitted = st.form_submit_button("Soumettre pour validation", type="primary")
+
+            if submitted:
+                # Vérifier si une entrée similaire existe déjà
+                existing_entry = st.session_state.data[
+                    (st.session_state.data['location'] == user_info['location']) &
+                    (st.session_state.data['year'] == year) &
+                    (st.session_state.data['month'] == month) &
+                    (st.session_state.data['category'] == category)
+                ]
+                if not existing_entry.empty:
+                    st.error(f"❌ Une entrée pour {category} en {month}/{year} existe déjà. Veuillez la modifier ou la supprimer si nécessaire.")
+                else:
+                    standard_value, standard_unit = perform_conversion(value, unit, category)
+                    
+                    new_id = st.session_state.data['id'].max() + 1 if not st.session_state.data.empty else 1
+                    
+                    new_data = pd.DataFrame([{
+                        'id': new_id,
+                        'location': user_info['location'],
+                        'division': user_info['division'],
+                        'year': year,
+                        'month': month,
+                        'category': category,
+                        'value_input': value,
+                        'unit_input': unit,
+                        'value_standardized': standard_value,
+                        'unit_standardized': standard_unit,
+                        'status': 'En attente',
+                        'submitted_by': username,
+                        'approved_by': None,
+                        'submission_date': pd.to_datetime('now')
+                    }])
+                    st.session_state.data = pd.concat([st.session_state.data, new_data], ignore_index=True)
+                    st.success(f"✅ Données pour {category} soumises avec succès ! Valeur standardisée : {standard_value:.2f} {standard_unit}.")
+
+        st.divider()
+        st.header("Historique de vos saisies")
+        
+        location_data = st.session_state.data[st.session_state.data['location'] == user_info['location']].copy()
+        location_data.sort_values(by=['year', 'month', 'submission_date'], ascending=False, inplace=True)
+        
+        if location_data.empty:
+            st.write("Vous n'avez pas encore soumis de données.")
+        else:
+            st.dataframe(
+                location_data[['year', 'month', 'category', 'value_input', 'unit_input', 'status']],
+                use_container_width=True,
+                hide_index=True
+            )
+
+    # --- Vue pour les Managers de Division ---
+    elif role == 'Manager de division':
+        st.title(f"📋 Validation des données pour la {user_info['division']}")
+
+        pending_data = st.session_state.data[
+            (st.session_state.data['division'] == user_info['division']) &
+            (st.session_state.data['status'] == 'En attente')
+        ].copy()
+
+        st.header(f"Requêtes en attente ({len(pending_data)})")
+        
+        if pending_data.empty:
+            st.success("🎉 Toutes les saisies sont à jour ! Aucun élément en attente de validation.")
+        else:
+            st.info("Examinez les saisies ci-dessous. La colonne 'Plausibilité' compare la valeur actuelle à celle du même mois de l'année précédente.", icon="🔍")
+            for index, row in pending_data.iterrows():
+                plausibility_text, color = get_plausibility_check(row, st.session_state.data)
+
+                with st.container(border=True):
+                    c1, c2, c3, c4 = st.columns([2, 3, 2, 2])
+                    with c1:
+                        st.write(f"**{row['location']}**")
+                        st.caption(f"{row['month']}/{row['year']}")
+                    with c2:
+                        st.metric(
+                            label=f"{row['category']} (standardisé)",
+                            value=f"{row['value_standardized']:.2f} {row['unit_standardized']}",
+                            help=f"Saisi : {row['value_input']} {row['unit_input']}"
+                        )
+                    with c3:
+                        st.metric(
+                            label="Plausibilité",
+                            value=plausibility_text
+                        )
+                    
+                    with c4:
+                        st.write("") # Espace pour aligner les boutons
+                        btn_c1, btn_c2 = st.columns(2)
+                        with btn_c1:
+                            if st.button("Approuver", key=f"approve_{row['id']}", type="primary", use_container_width=True):
+                                st.session_state.data.loc[st.session_state.data['id'] == row['id'], 'status'] = 'Approuvé'
+                                st.session_state.data.loc[st.session_state.data['id'] == row['id'], 'approved_by'] = username
+                                st.toast(f"✅ Saisie de {row['location']} approuvée.", icon="👍")
+                                st.rerun()
+                        with btn_c2:
+                            if st.button("Rejeter", key=f"reject_{row['id']}", use_container_width=True):
+                                st.session_state.data.loc[st.session_state.data['id'] == row['id'], 'status'] = 'Rejeté'
+                                st.session_state.data.loc[st.session_state.data['id'] == row['id'], 'approved_by'] = username
+                                st.toast(f"❌ Saisie de {row['location']} rejetée.", icon="👎")
+                                st.rerun()
+        
+        st.divider()
+        st.header("📦 Export des données validées")
+        st.write("Cette section permet de télécharger toutes les données approuvées pour les transférer vers votre base de données centrale ou Cozero.")
+
+        approved_data = st.session_state.data[st.session_state.data['status'] == 'Approuvé'].copy()
+        
+        if approved_data.empty:
+            st.warning("Aucune donnée approuvée n'est disponible pour l'export.")
+        else:
+            st.dataframe(approved_data, use_container_width=True, hide_index=True)
+            
+            csv = approved_data.to_csv(index=False).encode('utf-8')
+            
+            st.download_button(
+                label="📥 Télécharger les données en CSV",
+                data=csv,
+                file_name="donnees_approuvees.csv",
+                mime="text/csv",
+                type="primary"
+            )
+
+    # --- Vue pour l'Administrateur (simple) ---
+    elif role == 'Administrateur':
+        st.title("Vue d'ensemble Administrateur")
+        st.write("Toutes les données du système.")
+        st.dataframe(st.session_state.data, use_container_width=True, hide_index=True)
