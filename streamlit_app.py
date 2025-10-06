@@ -5,61 +5,10 @@ from datetime import datetime
 
 # --- Page Configuration ---
 st.set_page_config(
-    page_title="Liebherr Carbon Tracking Portal",
-    page_icon="🏗️",
+    page_title="Energy Tracking Portal",
+    page_icon="🌿",
     layout="wide"
 )
-
-# --- Custom CSS for Liebherr Branding ---
-st.markdown("""
-<style>
-    /* Liebherr Color Palette */
-    :root {
-        --primary-color: #F0E300; /* Liebherr Yellow */
-        --secondary-color: #3E4042; /* Liebherr Grey */
-        --text-color: #3E4042;
-        --background-color: #FFFFFF;
-        --secondary-background-color: #F5F5F5; /* Light grey for sidebar */
-    }
-
-    /* Primary button styling */
-    .stButton > button {
-        border: 2px solid var(--secondary-color);
-        border-radius: 5px;
-        background-color: var(--primary-color);
-        color: var(--secondary-color);
-        font-weight: bold;
-    }
-    .stButton > button:hover {
-        background-color: #E0D300; /* Slightly darker yellow */
-        color: var(--secondary-color);
-        border-color: var(--secondary-color);
-    }
-    .stButton > button:active {
-        background-color: #D1C400; /* Even darker yellow */
-        border-color: var(--secondary-color);
-    }
-
-    /* Headers */
-    h1, h2, h3 {
-        color: var(--secondary-color);
-    }
-    
-    /* Sidebar */
-    [data-testid="stSidebar"] {
-        background-color: var(--secondary-background-color);
-    }
-    
-    /* Expander styling */
-    .st-expander-header {
-       font-size: 1.1rem;
-       font-weight: bold;
-       color: var(--secondary-color);
-    }
-
-</style>
-""", unsafe_allow_html=True)
-
 
 # --- Mock Database (for demonstration purposes) ---
 def initialize_database():
@@ -69,8 +18,8 @@ def initialize_database():
     
     data = {
         'id': [1, 2, 3],
-        'location': ['Colmar Site (France)', 'Newport News Site (USA)', 'Toulouse Site (France)'],
-        'division': ['Mining Division', 'Mining Division', 'Aerospace Division'],
+        'location': ['Site Alpha', 'Site Beta', 'Site Gamma'],
+        'division': ['North Division', 'South Division', 'North Division'],
         'year': [current_year - 1, current_year - 1, current_year],
         'month': [np.nan, np.nan, np.nan],
         'category': ['Diesel B7 (on-road vehicle)', 'Gasoline E5 (on-road vehicle)', 'Leakage R134a'],
@@ -79,8 +28,8 @@ def initialize_database():
         'value_standardized': [12550, 8500, 15],
         'unit_standardized': ['liters', 'liters', 'kg'],
         'status': ['Approved', 'Approved', 'Pending'],
-        'submitted_by': ['user_colmar', 'user_newport', 'user_toulouse'],
-        'approved_by': ['manager_mining', 'manager_mining', None],
+        'submitted_by': ['user_alpha', 'user_beta', 'user_gamma'],
+        'approved_by': ['manager_north', 'manager_south', None],
         'submission_date': [pd.to_datetime(now) - pd.DateOffset(years=1)] * 2 + [pd.to_datetime(now)]
     }
     df = pd.DataFrame(data)
@@ -118,30 +67,32 @@ ANNUAL_CATEGORIES_CONFIG = {
     "FAME / Diesel B100 (on-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}, "group": "Vehicle Fuels"},
     "HVO100 (non-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}, "group": "Vehicle Fuels"},
     "HVO100 (on-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}, "group": "Vehicle Fuels"},
-    "LPG (non-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}, "group": "Vehicle Fuels"},
-    "LPG (on-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}, "group": "Vehicle Fuels"},
-    # Industrial Processes
-    "Kerosene": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}, "group": "Industrial Processes & Manufacturing"},
-    "Propane": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541, "kg": 1.96}, "group": "Industrial Processes & Manufacturing"},
-    "LNG - Liquefied Natural Gas": {"standard_unit": "tonnes", "units": {"tonnes": 1, "m³": 0.45}, "group": "Industrial Processes & Manufacturing"},
-    "Acetylene": {"standard_unit": "kg", "units": {"kg": 1, "m³": 1.09}, "group": "Industrial Processes & Manufacturing"},
-    "Liquid Nitrogen": {"standard_unit": "liters", "units": {"liters": 1}, "group": "Industrial Processes & Manufacturing"},
-    "Grey Hydrogen": {"standard_unit": "kg", "units": {"kg": 1}, "group": "Industrial Processes & Manufacturing"},
-    "Green Hydrogen": {"standard_unit": "kg", "units": {"kg": 1}, "group": "Industrial Processes & Manufacturing"},
+    "LPG - Liquefied propane gas (non-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}, "group": "Vehicle Fuels"},
+    "LPG - Liquefied propane gas (on-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}, "group": "Vehicle Fuels"},
+    # Other Fuels & Industrial Gases
+    "Kerosene": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}, "group": "Other Fuels & Industrial Gases"},
+    "Propane": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541, "kg": 1.96}, "group": "Other Fuels & Industrial Gases"},
+    "LNG - Liquefied natural gas": {"standard_unit": "tonnes", "units": {"tonnes": 1, "m³": 0.45}, "group": "Other Fuels & Industrial Gases"},
+    "Acetylene": {"standard_unit": "kg", "units": {"kg": 1, "m³": 1.09}, "group": "Other Fuels & Industrial Gases"},
+    "Liquid Nitrogen": {"standard_unit": "liters", "units": {"liters": 1}, "group": "Other Fuels & Industrial Gases"},
+    "Grey hydrogen": {"standard_unit": "kg", "units": {"kg": 1}, "group": "Other Fuels & Industrial Gases"},
+    "Green hydrogen": {"standard_unit": "kg", "units": {"kg": 1}, "group": "Other Fuels & Industrial Gases"},
     # Self-generated Energy
     "Self-generated electricity (Renewable)": {"standard_unit": "MWh", "units": {"MWh": 1, "kWh": 0.001}, "group": "Self-Generated Energy"},
     "Self-generated electricity (Non-Renewable)": {"standard_unit": "MWh", "units": {"MWh": 1, "kWh": 0.001}, "group": "Self-Generated Energy"},
     "Self-generated heat (Renewable)": {"standard_unit": "MWh", "units": {"MWh": 1, "kWh": 0.001}, "group": "Self-Generated Energy"},
     "Self-generated heat (Non-Renewable)": {"standard_unit": "MWh", "units": {"MWh": 1, "kWh": 0.001}, "group": "Self-Generated Energy"},
+    # Agriculture
+    "Beef cattle": {"standard_unit": "heads", "units": {"heads": 1}, "group": "Agriculture"},
 }
 
 # --- Mock Users ---
 USERS = {
-    'user_colmar': {'role': 'Site Employee', 'location': 'Colmar Site (France)', 'division': 'Mining Division'},
-    'user_newport': {'role': 'Site Employee', 'location': 'Newport News Site (USA)', 'division': 'Mining Division'},
-    'user_toulouse': {'role': 'Site Employee', 'location': 'Toulouse Site (France)', 'division': 'Aerospace Division'},
-    'manager_mining': {'role': 'Division Manager', 'division': 'Mining Division'},
-    'manager_aero': {'role': 'Division Manager', 'division': 'Aerospace Division'},
+    'user_alpha': {'role': 'Site Employee', 'location': 'Site Alpha', 'division': 'North Division'},
+    'user_beta': {'role': 'Site Employee', 'location': 'Site Beta', 'division': 'South Division'},
+    'user_gamma': {'role': 'Site Employee', 'location': 'Site Gamma', 'division': 'North Division'},
+    'manager_north': {'role': 'Division Manager', 'division': 'North Division'},
+    'manager_south': {'role': 'Division Manager', 'division': 'South Division'},
     'admin': {'role': 'Administrator', 'division': 'All'}
 }
 
@@ -151,9 +102,9 @@ if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 if 'user_info' not in st.session_state: st.session_state.user_info = None
 if 'annual_config' not in st.session_state:
     st.session_state.annual_config = {
-        'Colmar Site (France)': ["Leakage R410a", "Diesel B7 (on-road vehicle)"], 
-        'Newport News Site (USA)': ["Gasoline E5 (on-road vehicle)"],
-        'Toulouse Site (France)': ["Leakage R134a", "Kerosene"]
+        'Site Alpha': ["Leakage R410a", "Diesel B7 (on-road vehicle)"], 
+        'Site Beta': ["Gasoline E5 (on-road vehicle)"],
+        'Site Gamma': ["Leakage R134a", "Diesel B0 (non-road vehicle)"]
     }
 
 # --- Utility Functions ---
@@ -183,8 +134,7 @@ def get_plausibility_check(record_to_check, full_data):
 
 # --- User Interface ---
 if not st.session_state.logged_in:
-    st.image("liebherr.png", width=300)
-    st.title("Welcome to the Carbon Tracking Portal 🏗️")
+    st.title("Welcome to the Energy Tracking Portal 🌿")
     username = st.selectbox("Select your username", list(USERS.keys()))
     if st.button("Log In", type="primary"):
         st.session_state.logged_in = True
@@ -204,6 +154,7 @@ else:
         
         page_selection = "Overview"
         if role == 'Site Employee':
+            # Reordered the navigation menu
             page_selection = st.radio("Navigation", ["Annual Configuration", "Annual Entry"])
         
         if st.button("Log Out"):
@@ -219,7 +170,7 @@ else:
             
             toggled_fields = []
             
-            group_order = ["Refrigerants", "Vehicle Fuels", "Industrial Processes & Manufacturing", "Self-Generated Energy"]
+            group_order = ["Refrigerants", "Vehicle Fuels", "Other Fuels & Industrial Gases", "Self-Generated Energy", "Agriculture"]
 
             for group in group_order:
                 with st.expander(group):
@@ -235,7 +186,7 @@ else:
                 st.success("Configuration saved!")
 
         elif page_selection == "Annual Entry":
-            st.title(f"🗓️ Annual Entry for {user_info['location']}")
+            st.title(f"🗓️ Annual Data Entry for {user_info['location']}")
             active_fields = st.session_state.annual_config.get(user_info['location'], [])
             if not active_fields:
                 st.warning("No annual fields are configured. Go to the 'Annual Configuration' page to select them.")
@@ -276,7 +227,7 @@ else:
             for index, row in pending_data.iterrows():
                 plausibility_text, _ = get_plausibility_check(row, st.session_state.data)
                 with st.container(border=True):
-                    c1, c2, c3, c4 = st.columns([3, 3, 2, 2])
+                    c1, c2, c3, c4 = st.columns([2, 3, 2, 2])
                     with c1:
                         st.write(f"**{row['location']}**")
                         st.caption(f"Year {row['year']}")
@@ -294,13 +245,12 @@ else:
         st.divider()
         st.header("📦 Export Validated Data")
         approved_data = st.session_state.data[st.session_state.data['status'] == 'Approved'].copy()
-        if approved_data.empty: st.warning("No approved data available.")
+        if approved_data.empty: st.warning("No approved data is available.")
         else:
             st.dataframe(approved_data, use_container_width=True, hide_index=True)
             csv = approved_data.to_csv(index=False).encode('utf-8')
-            st.download_button("📥 Download as CSV", csv, "liebherr_approved_data.csv", "text/csv", type="primary")
+            st.download_button("📥 Download as CSV", csv, "approved_data.csv", "text/csv", type="primary")
             
     elif role == 'Administrator':
         st.title("Administrator Overview")
         st.dataframe(st.session_state.data, use_container_width=True, hide_index=True)
-
