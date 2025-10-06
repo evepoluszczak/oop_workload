@@ -51,50 +51,51 @@ MONTHLY_CATEGORIES = {
 
 ANNUAL_CATEGORIES_CONFIG = {
     # Refrigerants
-    "Leakage R134a": {"standard_unit": "kg", "units": {"kg": 1, "lbs": 0.453592}},
-    "Leakage R22": {"standard_unit": "kg", "units": {"kg": 1, "lbs": 0.453592}},
-    "Leakage R290": {"standard_unit": "kg", "units": {"kg": 1, "lbs": 0.453592}},
-    "Leakage R32": {"standard_unit": "kg", "units": {"kg": 1, "lbs": 0.453592}},
-    "Leakage R404a": {"standard_unit": "kg", "units": {"kg": 1, "lbs": 0.453592}},
-    "Leakage R407c": {"standard_unit": "kg", "units": {"kg": 1, "lbs": 0.453592}},
-    "Leakage R410a": {"standard_unit": "kg", "units": {"kg": 1, "lbs": 0.453592}},
-    "Leakage R507": {"standard_unit": "kg", "units": {"kg": 1, "lbs": 0.453592}},
-    "Leakage R508b": {"standard_unit": "kg", "units": {"kg": 1, "lbs": 0.453592}},
-    "Leakage R600": {"standard_unit": "kg", "units": {"kg": 1, "lbs": 0.453592}},
-    "Leakage R600a": {"standard_unit": "kg", "units": {"kg": 1, "lbs": 0.453592}},
-    # Fuels
-    "Diesel B0 (non-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}},
-    "Diesel B0 (on-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}},
-    "Diesel B7 (non-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}},
-    "Diesel B7 (on-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}},
-    "Diesel B30 (non-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}},
-    "Diesel B30 (on-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}},
-    "Gasoline E5 (non-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}},
-    "Gasoline E5 (on-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}},
-    "Gasoline E10 (non-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}},
-    "Gasoline E10 (on-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}},
-    "Ethanol E100 (non-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}},
-    "Ethanol E100 (on-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}},
-    "FAME / Diesel B100 (non-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}},
-    "FAME / Diesel B100 (on-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}},
-    "HVO100 (non-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}},
-    "HVO100 (on-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}},
-    "LPG - Liquefied propane gas (non-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}},
-    "LPG - Liquefied propane gas (on-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}},
-    "Kerosene": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}},
-    "Propane": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541, "kg": 1.96}},
-    "LNG - Liquefied natural gas": {"standard_unit": "tonnes", "units": {"tonnes": 1, "m³": 0.45}},
-    "Acetylene": {"standard_unit": "kg", "units": {"kg": 1, "m³": 1.09}},
-    "Liquid Nitrogen": {"standard_unit": "liters", "units": {"liters": 1}},
-    "Grey hydrogen": {"standard_unit": "kg", "units": {"kg": 1}},
-    "Green hydrogen": {"standard_unit": "kg", "units": {"kg": 1}},
-    # Self-generated
-    "Self-generated electricity (Renewable)": {"standard_unit": "MWh", "units": {"MWh": 1, "kWh": 0.001}},
-    "Self-generated electricity (Non-Renewable)": {"standard_unit": "MWh", "units": {"MWh": 1, "kWh": 0.001}},
-    "Self-generated heat (Renewable)": {"standard_unit": "MWh", "units": {"MWh": 1, "kWh": 0.001}},
-    "Self-generated heat (Non-Renewable)": {"standard_unit": "MWh", "units": {"MWh": 1, "kWh": 0.001}},
-    # Other
-    "Beef cattle": {"standard_unit": "heads", "units": {"heads": 1}},
+    "Leakage R134a": {"standard_unit": "kg", "units": {"kg": 1, "lbs": 0.453592}, "group": "Refrigerants"},
+    "Leakage R22": {"standard_unit": "kg", "units": {"kg": 1, "lbs": 0.453592}, "group": "Refrigerants"},
+    "Leakage R290": {"standard_unit": "kg", "units": {"kg": 1, "lbs": 0.453592}, "group": "Refrigerants"},
+    "Leakage R32": {"standard_unit": "kg", "units": {"kg": 1, "lbs": 0.453592}, "group": "Refrigerants"},
+    "Leakage R404a": {"standard_unit": "kg", "units": {"kg": 1, "lbs": 0.453592}, "group": "Refrigerants"},
+    "Leakage R407c": {"standard_unit": "kg", "units": {"kg": 1, "lbs": 0.453592}, "group": "Refrigerants"},
+    "Leakage R410a": {"standard_unit": "kg", "units": {"kg": 1, "lbs": 0.453592}, "group": "Refrigerants"},
+    "Leakage R507": {"standard_unit": "kg", "units": {"kg": 1, "lbs": 0.453592}, "group": "Refrigerants"},
+    "Leakage R508b": {"standard_unit": "kg", "units": {"kg": 1, "lbs": 0.453592}, "group": "Refrigerants"},
+    "Leakage R600": {"standard_unit": "kg", "units": {"kg": 1, "lbs": 0.453592}, "group": "Refrigerants"},
+    "Leakage R600a": {"standard_unit": "kg", "units": {"kg": 1, "lbs": 0.453592}, "group": "Refrigerants"},
+    # Vehicle Fuels
+    "Diesel B0 (non-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}, "group": "Vehicle Fuels"},
+    "Diesel B0 (on-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}, "group": "Vehicle Fuels"},
+    "Diesel B7 (non-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}, "group": "Vehicle Fuels"},
+    "Diesel B7 (on-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}, "group": "Vehicle Fuels"},
+    "Diesel B30 (non-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}, "group": "Vehicle Fuels"},
+    "Diesel B30 (on-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}, "group": "Vehicle Fuels"},
+    "Gasoline E5 (non-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}, "group": "Vehicle Fuels"},
+    "Gasoline E5 (on-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}, "group": "Vehicle Fuels"},
+    "Gasoline E10 (non-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}, "group": "Vehicle Fuels"},
+    "Gasoline E10 (on-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}, "group": "Vehicle Fuels"},
+    "Ethanol E100 (non-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}, "group": "Vehicle Fuels"},
+    "Ethanol E100 (on-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}, "group": "Vehicle Fuels"},
+    "FAME / Diesel B100 (non-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}, "group": "Vehicle Fuels"},
+    "FAME / Diesel B100 (on-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}, "group": "Vehicle Fuels"},
+    "HVO100 (non-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}, "group": "Vehicle Fuels"},
+    "HVO100 (on-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}, "group": "Vehicle Fuels"},
+    "LPG - Liquefied propane gas (non-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}, "group": "Vehicle Fuels"},
+    "LPG - Liquefied propane gas (on-road vehicle)": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}, "group": "Vehicle Fuels"},
+    # Other Fuels & Industrial Gases
+    "Kerosene": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541}, "group": "Other Fuels & Industrial Gases"},
+    "Propane": {"standard_unit": "liters", "units": {"liters": 1, "gallons (US)": 3.78541, "kg": 1.96}, "group": "Other Fuels & Industrial Gases"},
+    "LNG - Liquefied natural gas": {"standard_unit": "tonnes", "units": {"tonnes": 1, "m³": 0.45}, "group": "Other Fuels & Industrial Gases"},
+    "Acetylene": {"standard_unit": "kg", "units": {"kg": 1, "m³": 1.09}, "group": "Other Fuels & Industrial Gases"},
+    "Liquid Nitrogen": {"standard_unit": "liters", "units": {"liters": 1}, "group": "Other Fuels & Industrial Gases"},
+    "Grey hydrogen": {"standard_unit": "kg", "units": {"kg": 1}, "group": "Other Fuels & Industrial Gases"},
+    "Green hydrogen": {"standard_unit": "kg", "units": {"kg": 1}, "group": "Other Fuels & Industrial Gases"},
+    # Self-generated Energy
+    "Self-generated electricity (Renewable)": {"standard_unit": "MWh", "units": {"MWh": 1, "kWh": 0.001}, "group": "Self-Generated Energy"},
+    "Self-generated electricity (Non-Renewable)": {"standard_unit": "MWh", "units": {"MWh": 1, "kWh": 0.001}, "group": "Self-Generated Energy"},
+    "Self-generated heat (Renewable)": {"standard_unit": "MWh", "units": {"MWh": 1, "kWh": 0.001}, "group": "Self-Generated Energy"},
+    "Self-generated heat (Non-Renewable)": {"standard_unit": "MWh", "units": {"MWh": 1, "kWh": 0.001}, "group": "Self-Generated Energy"},
+    # Agriculture
+    "Beef cattle": {"standard_unit": "heads", "units": {"heads": 1}, "group": "Agriculture"},
 }
 
 
@@ -217,11 +218,21 @@ else:
             current_selection = st.session_state.annual_config.get(location, [])
             
             toggled_fields = []
-            for field in ANNUAL_CATEGORIES_CONFIG.keys():
-                is_active = st.toggle(field, value=(field in current_selection))
-                if is_active:
-                    toggled_fields.append(field)
             
+            # Define the order of groups
+            group_order = ["Refrigerants", "Vehicle Fuels", "Other Fuels & Industrial Gases", "Self-Generated Energy", "Agriculture"]
+
+            for group in group_order:
+                st.subheader(group)
+                # Get all items for the current group
+                items_in_group = {item: config for item, config in ANNUAL_CATEGORIES_CONFIG.items() if config.get("group") == group}
+                
+                for field in items_in_group:
+                    is_active = st.toggle(field, value=(field in current_selection), key=field)
+                    if is_active:
+                        toggled_fields.append(field)
+                st.divider()
+
             if st.button("Save Configuration", type="primary"):
                 st.session_state.annual_config[location] = toggled_fields
                 st.success("Configuration saved!")
